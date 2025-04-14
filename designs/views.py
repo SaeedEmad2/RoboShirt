@@ -1,13 +1,14 @@
 from django.shortcuts import render
-# designs/views.py
-from rest_framework import viewsets, status
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError
-from store import serializers
-from .models import Design
-from .serializers import DesignSerializer 
+from rest_framework.filters import OrderingFilter, SearchFilter
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.response import Response
+from rest_framework.viewsets import ModelViewSet
+from .models import Design, Template
+from .serializers import DesignSerializer, TemplateSerializer
 from store.models import Customer
 
 class DesignViewSet(viewsets.ModelViewSet):
@@ -35,3 +36,17 @@ class DesignViewSet(viewsets.ModelViewSet):
         design = self.get_object()
         design.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+
+
+class TemplateViewSet(ModelViewSet):
+    queryset = Template.objects.all()
+    serializer_class = TemplateSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    
+    # Allow filtering by category
+    filterset_fields = ['category']  # Filter by category field
+    
+    # Allow searching by category name
+    search_fields = ['category']  # Search by category name
