@@ -19,7 +19,6 @@ class Template(models.Model):
         ('spooky', 'Spooky'),
     ]
 
-    name = models.CharField(max_length=100)
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
     image = models.ImageField(upload_to='templates/')
     description = models.TextField(blank=True)
