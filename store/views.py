@@ -3,7 +3,7 @@ from rest_framework.viewsets import ModelViewSet
 from .models import Product, Cart
 from rest_framework.mixins import CreateModelMixin
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
-from .serializers import ProductSerializer
+from .serializers import ProductSerializer,CartSerializer
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -16,12 +16,8 @@ class ProductViewSet(ModelViewSet):
     filterset_fields = ['product_size', 'product_color']  # Filter by these fields
     search_fields = ['product_name']  # Search by product name
     ordering_fields = ['product_price']  # Order by price
-    
-    
 
 
-
-
-
-
-
+class CartViewSet(CreateModelMixin,GenericViewSet):   
+    queryset = Cart.objects.all()
+    serializer_class = CartSerializer
