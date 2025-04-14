@@ -16,6 +16,28 @@ class Design(models.Model):
     def __str__(self):
         return f"Design {self.id} by {self.customer.first_name or 'Unknown'}"
     
+class Template(models.Model):
+    CATEGORY_CHOICES = [
+        ('movies', 'Movies'),
+        ('music', 'Music'),
+        ('quotes', 'Quotes'),
+        ('family', 'Family'),
+        ('gamers', 'Gamers'),
+        ('sports', 'Sports'),
+        ('funny', 'Funny'),
+        ('spooky', 'Spooky'),
+    ]
+
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
+    image = models.ImageField(upload_to='templates/')
+    description = models.TextField(blank=True)
+
+    def __str__(self):
+        return self.name
+    
+
+
+
     
 
 
