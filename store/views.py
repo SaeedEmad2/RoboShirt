@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework.viewsets import ModelViewSet
 from .models import Product, Cart
-from rest_framework.mixins import CreateModelMixin
+from rest_framework.mixins import CreateModelMixin , RetrieveModelMixin
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from .serializers import ProductSerializer,CartSerializer
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
@@ -18,6 +18,6 @@ class ProductViewSet(ModelViewSet):
     ordering_fields = ['product_price']  # Order by price
 
 
-class CartViewSet(CreateModelMixin,GenericViewSet):   
-    queryset = Cart.objects.all()
+class CartViewSet(CreateModelMixin,GenericViewSet,RetrieveModelMixin):   
+    queryset = Cart.objects.prefetch_related('items__product').all()
     serializer_class = CartSerializer
