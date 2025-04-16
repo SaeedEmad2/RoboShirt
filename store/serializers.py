@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 from .models import Product, Cart
-
+from rest_framework_simplejwt.tokens import RefreshToken
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
@@ -29,6 +29,19 @@ class RegisterSerializer(serializers.ModelSerializer):
             password=validated_data['password']
         )
         return user
+    
+
+
+class LogoutSerializer(serializers.Serializer):
+    refresh = serializers.CharField(write_only=True)
+    
+    def validate(self, attrs):
+        refresh = attrs.get('refresh')
+        try:
+            RefreshToken(refresh)  # Validate the refresh token
+        except Exception as e:
+            raise serializers.ValidationError("Invalid or expired refresh token.")
+        return attrs
     
 class ProductSerializer(serializers.ModelSerializer):
     class Meta: 
