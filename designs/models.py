@@ -36,7 +36,36 @@ class Template(models.Model):
         return self.name
     
 
-
+class Mockup(models.Model):
+    """Model to store T-shirt mockups with designs"""
+    COLOR_CHOICES = [
+        ('white', 'White'),
+        ('black', 'Black'),
+        ('red', 'Red'),
+        ('blue', 'Blue'),
+        ('green', 'Green'),
+        ('yellow', 'Yellow'),
+        ('purple', 'Purple'),
+        ('gray', 'Gray'),
+    ]
+    
+    SIZE_CHOICES = [
+        ('xs', 'XS'),
+        ('s', 'S'),
+        ('m', 'M'),
+        ('l', 'L'),
+        ('xl', 'XL'),
+        ('xxl', 'XXL'),
+    ]
+    
+    design = models.ForeignKey(Design, on_delete=models.CASCADE, related_name='mockups')
+    color = models.CharField(max_length=20, choices=COLOR_CHOICES)
+    size = models.CharField(max_length=10, choices=SIZE_CHOICES)
+    mockup_image = models.ImageField(upload_to='mockups/')
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"Mockup of design {self.design.id} - {self.color} {self.size}"
 
     
 
