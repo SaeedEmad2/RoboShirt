@@ -15,6 +15,7 @@ urlpatterns = [
         path('', include(designs_router.urls)),
     path('api/', include(store_router.urls)),  # Include store router
     path('api/designs/', include(designs_router.urls)),  # Include designs router
+    path('', include(designs_router.urls)),
 ]
 
 
