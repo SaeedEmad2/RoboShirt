@@ -42,7 +42,7 @@ class RegisterView(APIView):
 
 
 class LogoutView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         serializer = LogoutSerializer(data=request.data)
@@ -61,3 +61,15 @@ class LogoutView(APIView):
             token.blacklist()
             return Response({"message": "Logged out successfully"}, status=200)
         return Response({"error": "Refresh token is required or invalid."}, status=400)
+
+
+class UserDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        return Response({
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+        }, status=status.HTTP_200_OK)
