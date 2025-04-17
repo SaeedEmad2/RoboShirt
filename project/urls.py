@@ -6,14 +6,13 @@ from store.urls import router as store_router
 from designs.urls import router as designs_router
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from store.views import LogoutView, UserDetailView # Import LogoutView
+from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('__debug__/', include('debug_toolbar.urls')),
     path('api/', include(store_router.urls)),  # Include store router
     path('api/designs/', include(designs_router.urls)),  # Include designs router
-    path('api/', include('store.urls')),  # Include store URLs directly under /api/
-    
     # JWT Authentication Endpoints
     path('api/auth/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
