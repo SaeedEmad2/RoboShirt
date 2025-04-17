@@ -12,8 +12,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('__debug__/', include('debug_toolbar.urls')),
     path('', include(router.urls)),
-        path('', include(designs_router.urls)),
-    path('api/', include(store_router.urls)),  # Include store router
+    path('', include(designs_router.urls)),
+    path('store/', include('store.urls')),
     path('api/designs/', include(designs_router.urls)),  # Include designs router
     path('', include(designs_router.urls)),
 ]
