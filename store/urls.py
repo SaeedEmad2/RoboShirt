@@ -1,12 +1,14 @@
 from django.urls import path, include
 from rest_framework_nested.routers import NestedDefaultRouter
 from rest_framework.routers import DefaultRouter
-from .views import ProductViewSet, CartViewSet, CartItemViewSet, RegisterView, LogoutView, UserDetailView
+from .views import ProductViewSet, CartViewSet, CartItemViewSet, RegisterView, LogoutView, UserDetailView,PaymentViewSet, PaymentReceiptView
 
 # Main router
 router = DefaultRouter()
 router.register('products', ProductViewSet, basename='products')
 router.register('carts', CartViewSet, basename='carts')
+router.register('payments', PaymentViewSet, basename='payments')
+
 
 # Nested router for cart items
 carts_router = NestedDefaultRouter(router, 'carts', lookup='cart')
@@ -19,4 +21,5 @@ urlpatterns = [
     path('auth/register/', RegisterView.as_view(), name='register'),
     path('auth/logout/', LogoutView.as_view(), name='logout'),
     path('auth/user/', UserDetailView.as_view(), name='user_detail'),
+     path('payments/receipt/<str:receipt_id>/', PaymentReceiptView.as_view(), name='payment-receipt'),  # Payment receipt endpointg
 ]

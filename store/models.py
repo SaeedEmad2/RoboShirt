@@ -74,8 +74,10 @@ class Payment(models.Model):
     ]
     STATUS_CHOICES = [
         ('pending', 'Pending'),
+        ('processing', 'Processing'),
         ('completed', 'Completed'),
-        ('failed', 'Failed')
+        ('failed', 'Failed'),
+        ('refunded', 'Refunded')
     ]
     payment_method = models.CharField(max_length=50, choices=PAYMENT_CHOICES)
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
@@ -83,6 +85,9 @@ class Payment(models.Model):
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='pending')
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     payment_date = models.DateField(auto_now_add= True)
+    transaction_id = models.CharField(max_length=100, unique=True, null=True, blank=True)
+    receipt_id = models.CharField(max_length=100, unique=True, null=True, blank=True)
+    card_details = models.JSONField(null=True, blank=True)  # For storing masked card details
     
     def __str__(self):
         return f"Payment for Order {self.order.id}"
