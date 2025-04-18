@@ -1,9 +1,9 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import Product, Cart, CartItem
-
+from .models import Product, Cart, CartItem,Payment, Order
 from .models import Product, Cart
 from rest_framework_simplejwt.tokens import RefreshToken
+import uuid
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
@@ -116,3 +116,57 @@ class UpdateCartItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = CartItem
         fields = ['quantity']
+
+
+
+
+class PaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Payment
+        fields = ['id', 'payment_method', 'order', 'status', 'amount', 'payment_date', 'transaction_id', 'receipt_id']
+        read_only_fields = ['transaction_id', 'receipt_id', 'status', 'payment_date']
+
+class PaymentInitiateSerializer(serializers.Serializer):
+    order_id = serializers.IntegerField()
+    payment_method = serializers.ChoiceField(choices=Payment.PAYMENT_CHOICES)
+    card_number = serializers.CharField(max_length=16, min_length=16, required=False)
+    expiry_month = serializers.CharField(max_length=2, required=False)
+    expiry_year = serializers.CharField(max_length=2, required=False)
+    cvv = serializers.CharField(max_length=3, min_length=3, required=False)
+    
+    def validate(self, data):
+        # Validate order exists
+        order_id = data.get('order_id')
+        payment_method = data.get('payment_method')
+        
+        try:
+            order = Order.objects.get(id=order_id)
+        except Order.DoesNotExist:
+            raise serializers.ValidationError(f"Order with ID {order_id} does not exist")
+        
+        # If payment method is credit card, validate card details
+        if payment_method == 'credit_card':
+            required_fields = ['card_number', 'expiry_month', 'expiry_year', 'cvv']
+            for field in required_fields:
+                if not data.get(field):
+                    raise serializers.ValidationError(f"{field} is required for credit card payments")
+        
+        return data
+
+class PaymentVerifySerializer(serializers.Serializer):
+    transaction_id = serializers.CharField()
+
+class PaymentReceiptSerializer(serializers.ModelSerializer):
+    customer_name = serializers.SerializerMethodField()
+    order_number = serializers.SerializerMethodField()
+    
+    def get_customer_name(self, obj):
+        return f"{obj.user.first_name} {obj.user.last_name}" if obj.user.first_name else obj.user.username
+    
+    def get_order_number(self, obj):
+        return obj.order.id
+    
+    class Meta:
+        model = Payment
+        fields = ['id', 'receipt_id', 'transaction_id', 'payment_method', 'amount', 
+                  'payment_date', 'status', 'customer_name', 'order_number']
