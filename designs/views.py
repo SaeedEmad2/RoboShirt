@@ -148,10 +148,47 @@ class GenerateImageView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
-        # Get the prompt from the request
-        prompt = request.data.get("prompt")
-        if not prompt:
-            return Response({"error": "Prompt is required"}, status=400)
+        # Check if an audio file is provided
+        audio_file = request.FILES.get("audio")
+        if audio_file:
+            # LemonFox Whisper API details
+            whisper_api_url = "https://api.lemonfox.ai/v1/audio/transcriptions"
+            whisper_api_key = os.getenv("LEMONFOX_API_KEY")  # Store your API key in an environment variable
+
+            if not whisper_api_key:
+                logger.error("LemonFox API key is not set. Please configure the LEMONFOX_API_KEY environment variable.")
+                return Response({"error": "Server configuration error"}, status=500)
+
+            # Prepare headers and data for the Whisper API request
+            headers = {
+                "Authorization": f"Bearer {whisper_api_key}"
+            }
+            files = {
+                "file": audio_file
+            }
+            data = {
+                "language": "arabic",  # Specify the language
+                "response_format": "json",  # Get the response in JSON format
+                "translate": True  # Enable translation to English
+            }
+
+            # Send the request to the Whisper API
+            
+            whisper_response = requests.post(whisper_api_url, headers=headers, files=files, data=data)
+            print(whisper_response.text)
+            if whisper_response.status_code == 200:
+                # Extract the transcribed text from the response
+                prompt = whisper_response.json().get("text", "").strip()
+                if not prompt:
+                    return Response({"error": "Failed to transcribe audio"}, status=400)
+            else:
+                logger.error(f"Whisper API error: {whisper_response.status_code}, {whisper_response.text}")
+                return Response({"error": "Failed to process audio file"}, status=whisper_response.status_code)
+        else:
+            # Get the prompt from the request if no audio file is provided
+            prompt = request.data.get("prompt")
+            if not prompt:
+                return Response({"error": "Prompt or audio file is required"}, status=400)
 
         # Optional parameters
         aspect_ratio = request.data.get("aspect_ratio", "1:1")
@@ -192,10 +229,29 @@ class GenerateImageView(APIView):
             if not base64_image:
                 return Response({"error": "Image data not found in response"}, status=500)
 
-            # Return the base64 image string directly
-            return Response({
-                "message": "Image generated successfully",
-                "image_data": f"data:image/jpeg;base64,{base64_image}"
-            }, status=200)
-        else:
-            return Response(response.json(), status=response.status_code)
+               # Decode the base64 string
+
+            try:
+
+                image_data = base64.b64decode(base64_image)
+
+                # Save the image to a file
+
+                image_path = os.path.join(settings.MEDIA_ROOT, "generated_image.jpeg")
+
+                with open(image_path, "wb") as image_file:
+
+                    image_file.write(image_data)
+
+
+
+                logger.info(f"Image saved as '{image_path}'")
+
+                return Response({"message": "Image generated successfully", "image_path": image_path}, status=200)
+
+            except Exception as e:
+
+                logger.error(f"Error decoding or saving image: {e}")
+
+                return Response({"error": "Failed to decode or save image"}, status=500)
+
