@@ -5,18 +5,20 @@ from rest_framework.viewsets import ModelViewSet  # Import ModelViewSet
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter, SearchFilter
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny
 from rest_framework.response import Response
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 import os
+import requests
+import base64
 from django.core.files.base import ContentFile
 from django.conf import settings
 from .models import Design, Template, Mockup
 from .serializers import DesignSerializer, TemplateSerializer, MockupSerializer, MockupPreviewSerializer
 from store.models import Customer
-
+from rest_framework.views import APIView
 
 # Design ViewSet
 class DesignViewSet(viewsets.ModelViewSet):
@@ -136,3 +138,64 @@ def generate_mockup(design, color, size):
     mockup.save()
 
     return mockup
+
+
+import logging
+
+logger = logging.getLogger(__name__)
+
+class GenerateImageView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        # Get the prompt from the request
+        prompt = request.data.get("prompt")
+        if not prompt:
+            return Response({"error": "Prompt is required"}, status=400)
+
+        # Optional parameters
+        aspect_ratio = request.data.get("aspect_ratio", "1:1")
+        output_format = request.data.get("output_format", "jpeg")
+
+        # Stable Diffusion API details
+        api_url = "https://api.stability.ai/v2beta/stable-image/generate/sd3"
+        api_key = os.getenv("STABLE_DIFFUSION_API_KEY")
+
+        # Prepare headers
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Accept": "application/json",
+        }
+
+        # Prepare data for the request
+        files = {
+            "prompt": (None, prompt),
+            "aspect_ratio": (None, aspect_ratio),
+            "output_format": (None, output_format),
+        }
+
+        # Log the request
+        logger.info(f"Sending request to Stable Diffusion API: {files}")
+
+        # Send the request to the Stable Diffusion API
+        response = requests.post(api_url, headers=headers, files=files)
+
+        # Log the response
+        logger.info(f"Response from Stable Diffusion API: {response.status_code}, {response.text}")
+
+        if response.status_code == 200:
+            # Parse the JSON response
+            response_json = response.json()
+
+            # Get the base64-encoded image string
+            base64_image = response_json.get("image")
+            if not base64_image:
+                return Response({"error": "Image data not found in response"}, status=500)
+
+            # Return the base64 image string directly
+            return Response({
+                "message": "Image generated successfully",
+                "image_data": f"data:image/jpeg;base64,{base64_image}"
+            }, status=200)
+        else:
+            return Response(response.json(), status=response.status_code)
