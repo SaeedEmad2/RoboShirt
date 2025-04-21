@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 from dotenv import load_dotenv
 import os
+from datetime import timedelta
 
 # Load the .env file
 load_dotenv()
@@ -161,6 +162,15 @@ REST_FRAMEWORK ={
     'PAGE_SIZE': 10,  # Number of products per page
 }
 
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=30),  # Set access token to expire in 30 days
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=60),  # Optional: Set refresh token lifetime
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": SECRET_KEY,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+}
 
 # Media files (Uploads)
 MEDIA_URL = '/media/'
